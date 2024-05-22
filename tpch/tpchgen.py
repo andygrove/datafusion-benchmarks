@@ -126,14 +126,14 @@ def convert_tbl_to_parquet(ctx: SessionContext, table: str, tbl_filename: str, f
     print(f"Converting {tbl_filename} to {parquet_filename} ...")
 
     # schema manipulation code copied from DataFusion Python tpch example
-    table_schema = [(r[0].lower(), r[1]) for r in all_schemas[table]]
+    table_schema = [pyarrow.field(r[0].lower(), r[1], nullable=False) for r in all_schemas[table]]
 
     # Pre-collect the output columns so we can ignore the null field we add
     # in to handle the trailing | in the file
-    output_cols = [r[0] for r in table_schema]
+    output_cols = [r.name for r in table_schema]
 
     # Trailing | requires extra field for in processing
-    table_schema.append(("some_null", pyarrow.null()))
+    table_schema.append(pyarrow.field("some_null", pyarrow.null(), nullable=True))
 
     schema = pyarrow.schema(table_schema)
 
@@ -157,22 +157,22 @@ def generate_tpch(scale_factor: int, partitions: int):
         max_threads = os.cpu_count()
 
         # List of commands to run
-        commands = [
-            (f"docker run -v `pwd`/data:/data -t --rm ghcr.io/scalytics/tpch-docker:main -vf -s {scale_factor} -C {partitions} -S {part}",
-             f"/tmp/tpchgen-part{part}.log")
-            for part in range(1, partitions + 1)
-        ]
-
-        # run commands in parallel
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
-            futures = [executor.submit(run_and_log_output, command, log_file) for (command, log_file) in commands]
-
-            # wait for all futures to complete
-            for future in concurrent.futures.as_completed(futures):
-                try:
-                    future.result()
-                except Exception as e:
-                    print(f"Command failed with exception: {e}")
+        # commands = [
+        #     (f"docker run -v `pwd`/data:/data -t --rm ghcr.io/scalytics/tpch-docker:main -vf -s {scale_factor} -C {partitions} -S {part}",
+        #      f"/tmp/tpchgen-part{part}.log")
+        #     for part in range(1, partitions + 1)
+        # ]
+        #
+        # # run commands in parallel
+        # with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
+        #     futures = [executor.submit(run_and_log_output, command, log_file) for (command, log_file) in commands]
+        #
+        #     # wait for all futures to complete
+        #     for future in concurrent.futures.as_completed(futures):
+        #         try:
+        #             future.result()
+        #         except Exception as e:
+        #             print(f"Command failed with exception: {e}")
 
         # convert to parquet
         ctx = SessionContext()
