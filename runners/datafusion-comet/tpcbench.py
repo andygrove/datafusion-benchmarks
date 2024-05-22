@@ -57,7 +57,7 @@ def main(benchmark: str, data_path: str, query_path: str, iterations: int):
         'spark_conf': conf_dict,
     }
 
-    for iteration in range(0, iterations):
+    for iteration in range(1, iterations+1):
         print(f"Starting iteration {iteration} of {iterations}")
 
         for query in range(1, num_queries+1):

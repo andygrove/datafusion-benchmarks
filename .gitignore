@@ -1,3 +1,5 @@
 .idea
 *.json
 *.png
+nohup.out
+data
