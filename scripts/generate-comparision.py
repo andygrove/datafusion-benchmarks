@@ -18,7 +18,7 @@
 import json
 import matplotlib.pyplot as plt
 import numpy as np
-
+import sys
 
 def generate_per_query_chart(baseline, comparison):
     results = []
@@ -28,7 +28,7 @@ def generate_per_query_chart(baseline, comparison):
         if a > b:
             speedup = a/b-1
         else:
-            speedup = -1/(a/b)-1
+            speedup = -(1/(a/b)-1)
         results.append(("q" + str(query), round(speedup*100, 0)))
 
     results = sorted(results, key=lambda x: -x[1])
@@ -106,4 +106,4 @@ def main(filename1: str, filename2: str):
 
 if __name__ == '__main__':
     # TODO argparse
-    main("../runners/datafusion-comet/spark-baseline.json", "../runners/datafusion-comet/comet.json")
+    main(sys.argv[1], sys.argv[2])
