@@ -20,11 +20,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
+def geomean(data):
+    return np.prod(data) ** (1 / len(data))
+
 def generate_per_query_chart(baseline, comparison):
     results = []
     for query in range(1, 23):
-        a = np.mean(np.array(baseline[str(query)]))
-        b = np.mean(np.array(comparison[str(query)]))
+        a = geomean(np.array(baseline[str(query)]))
+        b = geomean(np.array(comparison[str(query)]))
         if a > b:
             speedup = a/b-1
         else:
@@ -45,11 +48,11 @@ def generate_per_query_chart(baseline, comparison):
     for bar, speedup in zip(bars, speedups):
         yval = bar.get_height()
         if yval >= 0:
-            ax.text(bar.get_x() + bar.get_width() / 2.0, yval, f'{yval}%', va='bottom', ha='center', fontsize=8,
-                    color='blue')
+            ax.text(bar.get_x() + bar.get_width() / 2.0, min(800, yval+20), f'{yval:.0f}%', va='bottom', ha='center', fontsize=8,
+                    color='blue', rotation=90)
         else:
-            ax.text(bar.get_x() + bar.get_width() / 2.0, yval, f'{yval}%', va='top', ha='center', fontsize=8,
-                    color='blue')
+            ax.text(bar.get_x() + bar.get_width() / 2.0, yval, f'{yval:.0f}%', va='top', ha='center', fontsize=8,
+                    color='blue', rotation=90)
 
     # Add title and labels
     ax.set_title('Comet Acceleration of TPC-H Queries')
@@ -58,7 +61,11 @@ def generate_per_query_chart(baseline, comparison):
 
     # Customize the y-axis to handle both positive and negative values better
     ax.axhline(0, color='black', linewidth=0.8)
-    ax.set_ylim(-400, 600)
+    min_value = (min(speedups) // 100) * 100
+    max_value = ((max(speedups) // 100) + 1) * 100
+    #min_value = -100
+    #max_value = 250
+    ax.set_ylim(min_value, max_value)
 
     # Show grid for better readability
     ax.yaxis.grid(True)
@@ -71,8 +78,8 @@ def generate_summary(baseline, comparison):
     baseline_total = 0
     comparison_total = 0
     for query in range(1, 23):
-        baseline_total += np.mean(np.array(baseline[str(query)]))
-        comparison_total += np.mean(np.array(comparison[str(query)]))
+        baseline_total += geomean(np.array(baseline[str(query)]))
+        comparison_total += geomean(np.array(comparison[str(query)]))
 
     # TODO make labels configurable
     labels = ['Spark', 'Spark + Comet']
